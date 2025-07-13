@@ -8,7 +8,7 @@ function Problem(props) {
 }
 
 export default function Problems() {
-    const problems = ["Course 'ECE 124' is not offered in Fall 2024", "Course 'PMATH 347' requires MATH 137 which is not satisfied"]
+    const problems = ["CourseDisplay 'ECE 124' is not offered in Fall 2024", "CourseDisplay 'PMATH 347' requires MATH 137 which is not satisfied"]
     return <div>
             <Text variant="titleMedium">{problems.length} {problems.length == 1 ? "problem" : "problems"} identified</Text>
         <div className="grid gap-4">

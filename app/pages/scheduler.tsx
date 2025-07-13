@@ -1,4 +1,4 @@
-import Course from "@/app/widgets/scheduler/course";
+import CourseDisplay from "@/app/widgets/scheduler/courseDisplay";
 import CourseColumn from "@/app/widgets/scheduler/courseColumn";
 import ScheduleRow from "@/app/widgets/scheduler/scheduleRow";
 import {
@@ -8,28 +8,84 @@ import {
 } from 'react-native-paper-tabs';
 import Checklist from "@/app/widgets/scheduler/checklist";
 import Problems from "@/app/widgets/scheduler/problems";
+import {useEffect, useRef, useState, useMemo} from "react";
+import Term from "@/app/types/term";
+import {Course} from "@/app/types/course";
+import {useSchedule} from "@/app/hooks/useSchedule";
 
 export default function SchedulerPage() {
+    const {terms, addCourse} = useSchedule();
+
+    const courseRefs = [];
+    const [isDraggedOn, setIsDraggedOn] = useState({});
+
+    const onCourseDrop = (x: number, y: number, course: Course) => {
+        courseRefs.forEach((ref, idx) => {
+            const rect = ref.current?.getBoundingClientRect();
+            if (ref.current &&
+                x >= rect.left &&
+                x <= rect.right &&
+                y <= rect.bottom &&
+                y >= rect.top) {
+                addCourse(idx, course);
+            }
+        });
+    }
+
+    const onDragUpdate = (x: number, y: number, course: Course) => {
+        courseRefs.forEach((ref, idx) => {
+            const rect = ref.current?.getBoundingClientRect();
+            if (ref.current &&
+                x >= rect.left &&
+                x <= rect.right &&
+                y <= rect.bottom &&
+                y >= rect.top) {
+                    setIsDraggedOn(prevIsDraggedOn => ({
+                        ...prevIsDraggedOn,
+                        [idx]: true
+                    }))
+            }
+            else setIsDraggedOn(prevIsDraggedOn => ({
+                ...prevIsDraggedOn,
+                [idx]: false
+            }))
+        })
+    }
+
+    const onDragEnd = (x: number, y: number, course: Course) => {
+        setIsDraggedOn({})
+    }
+
     return (
         <div className="flex flex-col gap-10">
             <ScheduleRow>
-                <CourseColumn term="1A" date="Fall 2022">
-                    <Course title="CS 135" description="Core Course" disabled/>
-                    <Course title="SPCOM 223" description="Communication" specialDescription="B&D: " />
-                    <Course title="MATH 135" description="Core Course" />
-                    <Course title="PHYS 121" description="Pure Science" specialDescription="B&D: "/>
-                    <Course title="MATH 137" description="Core Course" />
-                </CourseColumn>
-                <CourseColumn term="1B" date="Winter 2023">
-                    <Course title="test7" />
-                    <Course title="test8" />
-                </CourseColumn>
+                {terms.map((term, idx) => {
+                    const courseRef = useRef(null);
+                    courseRefs.push(courseRef);
+                    return (
+                        <CourseColumn 
+                            key={`${term.season}-${term.year}-${term.level}`} // Add stable key
+                            term={term.level} 
+                            date={`${term.season} ${term.year}`}
+                            isDraggingOn={isDraggedOn[idx] || false}
+                            ref={courseRef}
+                        >
+                            {term.courses.map((course: Course) => (
+                                <CourseDisplay 
+                                    key={course.id || course.title} // Add key here too
+                                    title={course.title} 
+                                    description={course.description}
+                                />
+                            ))}
+                        </CourseColumn>
+                    );
+                })}
             </ScheduleRow>
             <TabsProvider defaultIndex={0}>
                 <Tabs style={{ marginBottom: 20 }}
                         tabHeaderStyle={{ display: 'flex', alignItems: 'start' }}>
                     <TabScreen label="Checklist">
-                        <Checklist />
+                        <Checklist onCourseDrop={onCourseDrop} onDragUpdate={onDragUpdate} onDragEnd={onDragEnd} />
                     </TabScreen>
                     <TabScreen label="Problems">
                         <Problems />

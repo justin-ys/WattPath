@@ -1,5 +1,9 @@
-export enum Term {
-    Fall,
-    Spring,
-    Summer,
+import { Season } from "./season";
+import Course from "./course";
+
+export default interface Term {
+    level: String,
+    season: Season,
+    year: Number,
+    courses: Course[]
 }

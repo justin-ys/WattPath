@@ -37,11 +37,22 @@ export const SchedulerStyles = StyleSheet.create({
     courseSpecialDescription: {
         color: theme.colors.primary
     },
-    courseColumn: {
+    courseList: {
         display: 'flex',
         flexDirection: 'column',
-        maxHeight: '25vw',
+        maxHeight: '27vw',
         overflow: 'scroll',
+    },
+    courseColumnOverlay: {
+        position: 'absolute',
+        height: '100%',
+        width: '100%',
+        top: 0,
+        left: 0,
+        opacity: 0.4,
+        zIndex: 20,
+        border: '2px dotted grey',
+        borderRadius: '4px',
     },
     scheduleRowContainer: {
         display: 'flex',
