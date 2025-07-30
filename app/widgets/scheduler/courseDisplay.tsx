@@ -1,7 +1,7 @@
 import * as React from 'react';
 import {List, Portal} from 'react-native-paper';
 import { Text } from 'react-native-paper';
-import { SchedulerStyles} from "@/app/styles/schedulerStyles";
+import { SchedulerStyles } from "@/app/styles/schedulerStyles";
 import star from "@/assets/images/star_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.png"
 import SchedulerPage from "@/app/pages/scheduler";
 import { GestureDetector, Gesture } from 'react-native-gesture-handler';
@@ -13,6 +13,9 @@ import Animated, {
 } from 'react-native-reanimated';
 import { View } from 'react-native';
 import {transferableAbortController} from "node:util";
+import useInternalStyles from "@/app/hooks/useInternalStyles";
+
+import {HEADER_SIZE} from "@/app/constants"
 
 interface CourseDisplayProps {
     title: string;
@@ -39,9 +42,9 @@ export default function CourseDisplay(props: CourseDisplayProps) {
 
     const measureOriginalPosition = () => {
         if (originalRef.current) {
-            originalRef.current.measure((x, y, width, height, pageX, pageY) => {
-                startX.value = pageY; // why???
-                startY.value = pageX;
+            originalRef.current.measureInWindow((x, y, width, height) => {
+                startX.value = y - HEADER_SIZE; // why are they swapped???
+                startY.value = x;
             });
         }
     };
@@ -120,18 +123,23 @@ export default function CourseDisplay(props: CourseDisplayProps) {
         };
     });
 
+    const enabledStyle = useInternalStyles(SchedulerStyles).courseContainerEnabled;
+    const disabledStyle = useInternalStyles(SchedulerStyles).courseContainerDisabled;
+    const enabledTextStyle = useInternalStyles(SchedulerStyles).courseTitleEnabled;
+    const disabledTextStyle = useInternalStyles(SchedulerStyles).courseTitleDisabled;
+
     const courseItem = (
         <List.Item 
-            title={<Text variant="titleLarge" style={props.disabled ? SchedulerStyles.courseTitleDisabled : SchedulerStyles.courseTitleEnabled}>{props.title}</Text>}
-            style={props.disabled ? SchedulerStyles.courseContainerDisabled : SchedulerStyles.courseContainerEnabled}
-            contentStyle={SchedulerStyles.courseInternalContainer}
+            title={<Text variant="titleLarge" style={props.disabled ? disabledTextStyle : enabledTextStyle}>{props.title}</Text>}
+            style={props.disabled ? disabledStyle : enabledStyle}
+            contentStyle={useInternalStyles(SchedulerStyles).courseInternalContainer}
             description={
                 <View>
-                    {props.specialDescription ? <Text style={SchedulerStyles.courseSpecialDescription}>{props.specialDescription}</Text> : null}
-                    <Text style={SchedulerStyles.courseDescription}>{props.description}</Text>
+                    {props.specialDescription ? <Text style={useInternalStyles(SchedulerStyles).courseSpecialDescription}>{props.specialDescription}</Text> : null}
+                    <Text style={useInternalStyles(SchedulerStyles).courseDescription}>{props.description}</Text>
                 </View>
             }
-            left={props => <List.Icon {...props} icon="star" />} 
+            left={props => <List.Icon {...props} icon="star" />}
         />
     );
 

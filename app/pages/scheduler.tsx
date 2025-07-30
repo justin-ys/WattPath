@@ -12,6 +12,8 @@ import {useEffect, useRef, useState, useMemo} from "react";
 import Term from "@/app/types/term";
 import {Course} from "@/app/types/course";
 import {useSchedule} from "@/app/hooks/useSchedule";
+import {View} from "react-native";
+import {HEADER_SIZE} from "@/app/constants";
 
 export default function SchedulerPage() {
     const {terms, addCourse} = useSchedule();
@@ -25,8 +27,8 @@ export default function SchedulerPage() {
             if (ref.current &&
                 x >= rect.left &&
                 x <= rect.right &&
-                y <= rect.bottom &&
-                y >= rect.top) {
+                y <= rect.bottom - HEADER_SIZE && // something to do with the header idk never change the size of the header
+                y >= rect.top - HEADER_SIZE) {
                 addCourse(idx, course);
             }
         });
@@ -38,8 +40,8 @@ export default function SchedulerPage() {
             if (ref.current &&
                 x >= rect.left &&
                 x <= rect.right &&
-                y <= rect.bottom &&
-                y >= rect.top) {
+                y <= rect.bottom - HEADER_SIZE &&
+                y >= rect.top - HEADER_SIZE) {
                     setIsDraggedOn(prevIsDraggedOn => ({
                         ...prevIsDraggedOn,
                         [idx]: true
@@ -57,41 +59,45 @@ export default function SchedulerPage() {
     }
 
     return (
-        <div className="flex flex-col gap-10">
+        <>
+        <div className="flex flex-col gap-10 max-h-full">
             <ScheduleRow>
                 {terms.map((term, idx) => {
                     const courseRef = useRef(null);
                     courseRefs.push(courseRef);
                     return (
-                        <CourseColumn 
-                            key={`${term.season}-${term.year}-${term.level}`} // Add stable key
-                            term={term.level} 
-                            date={`${term.season} ${term.year}`}
-                            isDraggingOn={isDraggedOn[idx] || false}
-                            ref={courseRef}
-                        >
-                            {term.courses.map((course: Course) => (
-                                <CourseDisplay 
-                                    key={course.id || course.title} // Add key here too
-                                    title={course.title} 
-                                    description={course.description}
-                                />
-                            ))}
-                        </CourseColumn>
+                        <View style={{ maxHeight: '50vh', overflow: 'scroll' }}>
+                            <CourseColumn
+                                key={`${term.season}-${term.year}-${term.level}`}
+                                term={term.level}
+                                date={`${term.season} ${term.year}`}
+                                isDraggingOn={isDraggedOn[idx] || false}
+                                ref={courseRef}
+                            >
+                                {term.courses.map((course: Course) => (
+                                    <CourseDisplay
+                                        key={course.id || course.title}
+                                        title={course.title}
+                                        description={course.description}
+                                    />
+                                ))}
+                            </CourseColumn>
+                        </View>
                     );
                 })}
             </ScheduleRow>
-            <TabsProvider defaultIndex={0}>
-                <Tabs style={{ marginBottom: 20 }}
-                        tabHeaderStyle={{ display: 'flex', alignItems: 'start' }}>
-                    <TabScreen label="Checklist">
-                        <Checklist onCourseDrop={onCourseDrop} onDragUpdate={onDragUpdate} onDragEnd={onDragEnd} />
-                    </TabScreen>
-                    <TabScreen label="Problems">
-                        <Problems />
-                    </TabScreen>
-                </Tabs>
-            </TabsProvider>
         </div>
+        <TabsProvider defaultIndex={0}>
+            <Tabs style={{ marginBottom: 20, overflow: 'scroll' }}
+                    tabHeaderStyle={{ display: 'flex', alignItems: 'start' }}>
+                <TabScreen label="Checklist">
+                    <Checklist onCourseDrop={onCourseDrop} onDragUpdate={onDragUpdate} onDragEnd={onDragEnd} />
+                </TabScreen>
+                <TabScreen label="Problems">
+                    <Problems />
+                </TabScreen>
+            </Tabs>
+        </TabsProvider>
+        </>
     )
 }

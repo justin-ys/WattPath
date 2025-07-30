@@ -1,23 +1,24 @@
-import {StyleSheet} from "react-native";
+import {StyleSheet, useWindowDimensions} from "react-native";
 import { useTheme } from 'react-native-paper';
 
-const theme = useTheme();
-
-export const SchedulerStyles = StyleSheet.create({
+export const SchedulerStyles = (theme, width) =>  StyleSheet.create({
     courseContainerEnabled: {
         display: 'inline-block',
         backgroundColor: theme.colors.background,
-        paddingRight: '6em',
-        border: '0 0 0 1px solid black'
+        paddingRight: width < 1000 ? '1em' : '2em',
+        borderRadius: 3,
+        boxShadow: '-1px -1px 1px 1px #81858a inset',
+        width: width < 900 ? '60vw' : '20vw'
     },
     courseContainerDisabled: {
         display: 'inline-block',
         backgroundColor: theme.colors.surfaceVariant,
-        paddingRight: '6em',
-        border: '0 0 0 1px solid black'
+        paddingRight: width < 1000 ? '1em' : '2em',
+        border: '0 0 0 1px solid black',
+        width: width < 900 ? '60vw' : '20vw'
     },
     courseInternalContainer: {
-        marginRight: "3em",
+        marginRight: width < 1000 ? '0' : "1em",
         marginLeft: "1em",
     },
     courseTitleEnabled: {
@@ -40,7 +41,6 @@ export const SchedulerStyles = StyleSheet.create({
     courseList: {
         display: 'flex',
         flexDirection: 'column',
-        maxHeight: '27vw',
         overflow: 'scroll',
     },
     courseColumnOverlay: {
@@ -56,7 +56,9 @@ export const SchedulerStyles = StyleSheet.create({
     },
     scheduleRowContainer: {
         display: 'flex',
-        flexDirection: 'row'
+        flexDirection: 'row',
+        overflowX: 'scroll',
+        width: '95vw'
     },
     checklistUnits: {
         color: theme.colors.tertiary

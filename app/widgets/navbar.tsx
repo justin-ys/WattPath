@@ -2,7 +2,7 @@ import { Text } from "react-native-paper";
 import { NavbarStyles } from "@/app/styles/navbarStyles";
 
 export default function Navbar() {
-    return <div className="mr-4 h-full" style={{ borderRight: "2px solid gray"}}>
+    return <div className="mr-4 h-full" style={{ borderRight: "2px solid gray" }}>
         <div className="text-left mt-2 mr-8 pr-5 pl-1 h-full">
             <div className="flex flex-col justify-between h-full">
                 <div className="flex flex-col gap-2">
