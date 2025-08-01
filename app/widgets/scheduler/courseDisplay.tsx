@@ -57,12 +57,14 @@ export default function CourseDisplay(props: CourseDisplayProps) {
                 manager.activate();
             }
         })
+        .activateAfterLongPress(2000)
         .onStart(() => {
             runOnJS(measureOriginalPosition)();
             isDragging.value = true;
             originalOpacity.value = 0.3;
             scale.value = withSpring(1.05);
             if (props.onDragStart) {
+                console.log("drag start");
                 runOnJS(props.onDragStart)();
             }
         })

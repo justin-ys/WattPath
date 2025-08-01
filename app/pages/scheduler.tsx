@@ -12,14 +12,33 @@ import {useEffect, useRef, useState, useMemo} from "react";
 import Term from "@/app/types/term";
 import {Course} from "@/app/types/course";
 import {useSchedule} from "@/app/hooks/useSchedule";
-import {View} from "react-native";
+import {View, useWindowDimensions} from "react-native";
 import {HEADER_SIZE} from "@/app/constants";
+import { FAB } from 'react-native-paper';
+import Animated, {
+    useAnimatedStyle,
+    useSharedValue,
+    withSpring,
+    runOnJS,
+} from 'react-native-reanimated';
+import { useTheme } from "react-native-paper";
+import useIsMobile from "@/app/hooks/useIsMobile";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
 
 export default function SchedulerPage() {
+    const { height: screenHeight, width: screenWidth } = useWindowDimensions();
     const {terms, addCourse} = useSchedule();
+    const theme = useTheme();
+    const courseRefs: React.RefObject<any>[] = [];
+    const [isDraggedOn, setIsDraggedOn] = useState<{[key: number]: boolean}>({});
 
-    const courseRefs = [];
-    const [isDraggedOn, setIsDraggedOn] = useState({});
+    // Check if we're on mobile
+    const isMobile = useIsMobile();
+
+    // Animation values
+    const translateY = useSharedValue(screenHeight);
+    const regionTranslateY = useSharedValue(screenHeight*0.3);
+    const isExpanded = useSharedValue(false);
 
     const onCourseDrop = (x: number, y: number, course: Course) => {
         courseRefs.forEach((ref, idx) => {
@@ -58,6 +77,38 @@ export default function SchedulerPage() {
         setIsDraggedOn({})
     }
 
+    const expandSheet = () => {
+        translateY.value = withSpring(0, {overshootClamping: true})
+        regionTranslateY.value = -screenHeight*0.7;
+        isExpanded.value = true;
+    };
+
+    const collapseSheet = () => {
+        translateY.value = withSpring(screenHeight*0.7, {overshootClamping: true});
+        regionTranslateY.value = screenHeight*0.3;
+        isExpanded.value = false;
+    };
+
+    const animatedStyle = useAnimatedStyle(() => ({
+        transform: [{ translateY: translateY.value }],
+    }));
+
+    const clickRegionAnimatedStyle = useAnimatedStyle(() => ({
+        transform: [{ translateY: regionTranslateY.value }],
+    }));
+
+    // Modify onDragStart to collapse sheet
+    const onDragStart = () => {
+        if (isExpanded.value) {
+            collapseSheet();
+        }
+    };
+
+    const tapRegion = Gesture.Tap()
+    .onFinalize(() => {
+        runOnJS(collapseSheet)();
+    })
+
     return (
         <>
         <div className="flex flex-col gap-10 max-h-full">
@@ -66,9 +117,8 @@ export default function SchedulerPage() {
                     const courseRef = useRef(null);
                     courseRefs.push(courseRef);
                     return (
-                        <View style={{ maxHeight: '50vh', overflow: 'scroll' }}>
+                        <View key={`${term.season}-${term.year}-${term.level}`} style={{ maxHeight: 400, overflow: 'scroll' }}>
                             <CourseColumn
-                                key={`${term.season}-${term.year}-${term.level}`}
                                 term={term.level}
                                 date={`${term.season} ${term.year}`}
                                 isDraggingOn={isDraggedOn[idx] || false}
@@ -78,7 +128,7 @@ export default function SchedulerPage() {
                                     <CourseDisplay
                                         key={course.id || course.title}
                                         title={course.title}
-                                        description={course.description}
+                                        description={course.description || ""}
                                     />
                                 ))}
                             </CourseColumn>
@@ -87,17 +137,95 @@ export default function SchedulerPage() {
                 })}
             </ScheduleRow>
         </div>
-        <TabsProvider defaultIndex={0}>
-            <Tabs style={{ marginBottom: 20, overflow: 'scroll' }}
-                    tabHeaderStyle={{ display: 'flex', alignItems: 'start' }}>
-                <TabScreen label="Checklist">
-                    <Checklist onCourseDrop={onCourseDrop} onDragUpdate={onDragUpdate} onDragEnd={onDragEnd} />
-                </TabScreen>
-                <TabScreen label="Problems">
-                    <Problems />
-                </TabScreen>
-            </Tabs>
-        </TabsProvider>
+
+        {/* Mobile: Collapsible Bottom Sheet */}
+        {isMobile && (
+            <>
+                {/* Floating Action Button */}
+                <FAB
+                    icon={"format-list-checks"}
+                    style={{
+                        position: 'absolute',
+                        margin: 16,
+                        bottom: 16,
+                        right: 16,
+                    }}
+                    onPress={expandSheet}
+                />
+
+                <GestureDetector gesture={tapRegion}>
+                    <Animated.View style={[
+                        {
+                            height: screenHeight * 0.3,
+                            opacity: 0,
+                            top: screenHeight * 0.3,
+                            left: 0,
+                            right: 0
+                        },
+                        clickRegionAnimatedStyle,
+                    ]} />
+                </GestureDetector>
+
+                <Animated.View
+                    style={[
+                        {
+                            position: 'absolute',
+                            bottom: 0,
+                            left: 0,
+                            right: 0,
+                            height: screenHeight * 0.7,
+                            borderTopLeftRadius: 20,
+                            borderTopRightRadius: 20,
+                            shadowColor: '#000',
+                            backgroundColor: theme.colors.background,
+                            shadowOffset: { width: 0, height: -2 },
+                            shadowOpacity: 0.25,
+                            shadowRadius: 3.84,
+                            elevation: 5,
+                        },
+                        animatedStyle,
+                    ]}
+                >
+                    <View style={{ flex: 1, paddingHorizontal: 16, paddingVertical: 4 }}>
+                        <TabsProvider defaultIndex={0}>
+                            <Tabs style={{ flex: 1 }}>
+                                <TabScreen label="Checklist">
+                                    <Checklist
+                                        onCourseDrop={onCourseDrop}
+                                        onDragUpdate={onDragUpdate}
+                                        onDragEnd={onDragEnd}
+                                        onDragStart={onDragStart}
+                                    />
+                                </TabScreen>
+                                <TabScreen label="Problems">
+                                    <Problems />
+                                </TabScreen>
+                            </Tabs>
+                        </TabsProvider>
+                    </View>
+                </Animated.View>
+            </>
+        )}
+
+        {/* Desktop: Regular Tabs */}
+        {!isMobile && (
+            <TabsProvider defaultIndex={0}>
+                <Tabs style={{ marginBottom: 20, overflow: 'scroll' }}
+                        tabHeaderStyle={{ display: 'flex', alignItems: 'flex-start' }}>
+                    <TabScreen label="Checklist">
+                        <Checklist 
+                            onCourseDrop={onCourseDrop} 
+                            onDragUpdate={onDragUpdate} 
+                            onDragEnd={onDragEnd} 
+                            showProgram={true}
+                        />
+                    </TabScreen>
+                    <TabScreen label="Problems">
+                        <Problems />
+                    </TabScreen>
+                </Tabs>
+            </TabsProvider>
+        )}
         </>
-    )
+    );
 }

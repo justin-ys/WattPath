@@ -3,13 +3,16 @@ import CourseDisplay from "@/app/widgets/scheduler/courseDisplay";
 import { Text } from "react-native-paper";
 import { SchedulerStyles} from "@/app/styles/schedulerStyles";
 import { Course } from "@/app/types/course";
+import { Season } from "@/app/types/season";
 import useInternalStyles from "@/app/hooks/useInternalStyles";
 import {View} from "react-native";
 
 interface ChecklistProps {
     onCourseDrop: (x: number, y: number, course: Course) => void,
     onDragUpdate: (x: number, y: number, course: Course) => void,
-    onDragEnd: (x: number, y: number, course: Course) => void
+    onDragEnd: (x: number, y: number, course: Course) => void,
+    onDragStart?: () => void
+    showProgram: boolean
 }
 
 export default function Checklist(props: ChecklistProps) {
@@ -24,12 +27,16 @@ export default function Checklist(props: ChecklistProps) {
                     id: 15,
                     description: "Core Course",
                     units: 1,
+                    allowed_programs: ["CS/Digital Hardware"],
+                    terms_offered: [Season.Fall, Season.Spring],
                 },
                 {
                     title: "CS 246",
                     id: 16,
                     description: "Core Course",
                     units: 1,
+                    allowed_programs: ["CS/Digital Hardware"],
+                    terms_offered: [Season.Fall, Season.Spring],
                 },
             ]
         },
@@ -43,67 +50,87 @@ export default function Checklist(props: ChecklistProps) {
                     id: 17,
                     description: "Core Course",
                     units: 1,
+                    allowed_programs: ["CS/Digital Hardware"],
+                    terms_offered: [Season.Fall, Season.Spring],
                 },
                 {
                     title: "MATH 136",
                     id: 18,
                     description: "Core Course",
                     units: 1,
+                    allowed_programs: ["CS/Digital Hardware"],
+                    terms_offered: [Season.Fall, Season.Spring],
                 },
                 {
                     title: "MATH 137",
                     id: 19,
                     description: "Core Course",
                     units: 1,
+                    allowed_programs: ["CS/Digital Hardware"],
+                    terms_offered: [Season.Fall, Season.Spring],
                 },
                 {
                     title: "MATH 138",
                     id: 20,
                     description: "Core Course",
                     units: 1,
+                    allowed_programs: ["CS/Digital Hardware"],
+                    terms_offered: [Season.Fall, Season.Spring],
                 },
                 {
                     title: "MATH 139",
                     id: 21,
                     description: "Core Course",
                     units: 1,
+                    allowed_programs: ["CS/Digital Hardware"],
+                    terms_offered: [Season.Fall, Season.Spring],
                 },
                 {
                     title: "MATH 140",
                     id: 22,
                     description: "Core Course",
                     units: 1,
+                    allowed_programs: ["CS/Digital Hardware"],
+                    terms_offered: [Season.Fall, Season.Spring],
                 },
                 {
                     title: "MATH 141",
                     id: 23,
                     description: "Core Course",
                     units: 1,
+                    allowed_programs: ["CS/Digital Hardware"],
+                    terms_offered: [Season.Fall, Season.Spring],
                 },
                 {
                     title: "MATH 142",
                     id: 24,
                     description: "Core Course",
                     units: 1,
+                    allowed_programs: ["CS/Digital Hardware"],
+                    terms_offered: [Season.Fall, Season.Spring],
                 },
                 {
                     title: "MATH 143",
                     id: 25,
                     description: "Core Course",
                     units: 1,
+                    allowed_programs: ["CS/Digital Hardware"],
+                    terms_offered: [Season.Fall, Season.Spring],
                 },
                 {
                     title: "MATH 144",
                     id: 26,
                     description: "Core Course",
                     units: 1,
+                    allowed_programs: ["CS/Digital Hardware"],
+                    terms_offered: [Season.Fall, Season.Spring],
                 },
             ]
         }
     ]
     const program = "CS/Digital Hardware"
     return <div style={{maxHeight: '80%', display: 'flex', flexDirection: 'column'}}>
-        <Text style={useInternalStyles(SchedulerStyles).checklistProgram} variant="titleMedium">Requirements for <i>{program}</i></Text>
+        {props.showProgram && <Text style={useInternalStyles(SchedulerStyles).checklistProgram} variant="titleMedium">Requirements for <i>{program}</i></Text>}
         <div style={{overflowX: 'scroll'}} className="flex flex-row gap-2 mt-2 justify-start">
         {requirements.map(requirement =>
             <div className="flex flex-col gap-2 min-h-0">
@@ -119,10 +146,11 @@ export default function Checklist(props: ChecklistProps) {
                     <CourseColumn>
                     {requirement.courses.map((course: Course) => {
                         return <CourseDisplay title={course.title}
-                                              description={course.description}
+                                              description={course.description || ""}
                                               onDrop={(x, y) => props.onCourseDrop(x, y, course)}
                                               onDragUpdate={(x, y) => props.onDragUpdate(x, y, course)}
                                               onDragEnd={(x, y) => props.onDragEnd(x, y, course)}
+                                              onDragStart={props.onDragStart}
                                               draggable />
                     })}
                     </CourseColumn>

@@ -10,10 +10,10 @@ const CourseColumn = forwardRef<any, any>((props, ref) => {
         <div style={{maxHeight: '100%' }}>
             {props.isDraggingOn ? <View className="bg-indigo-200" style={overlayStyle} /> : null}
             <div style={{maxHeight: '100%'}} className="flex flex-col" ref={ref}>
-                <div className="flex justify-between p-2">
+                {props.term || props.date ? <div className="flex justify-between p-2">
                  {props.term ? <Text className="text-gray-400"><b>{props.term}</b></Text> : null}
                  {props.date ? <Text className="text-gray-400">{props.date}</Text> : null}
-                </div>
+                </div> : null}
                 <div className="gap-2 p-2 min-h-0" style={useInternalStyles(SchedulerStyles).courseList}>
                     {props.children}
                 </div>

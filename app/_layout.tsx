@@ -5,12 +5,14 @@ import Navbar from "@/app/widgets/navbar_drawer";
 import {useWindowDimensions, View} from "react-native";
 import {Navigator, Stack} from "expo-router";
 import Slot = Navigator.Slot;
+import useIsMobile from "./hooks/useIsMobile";
 
 export default function RootLayout() {
   const theme = useTheme();
   const {width} = useWindowDimensions();
+  const isMobile = useIsMobile();
 
-  return width < 1000 ? (
+  return isMobile ? (
       <Drawer
         drawerContent={(props) => <Navbar borderEnabled={false} />}
         screenOptions={{
@@ -19,7 +21,7 @@ export default function RootLayout() {
             backgroundColor: theme.colors.background
           },
           headerStyle: {
-            height: 50,
+            height: 32,
             position: "absolute",
           }
         }}
@@ -30,7 +32,9 @@ export default function RootLayout() {
             drawerLabel: 'Schedule',
             title: 'Schedule',
             headerStyle: {
-              backgroundColor: theme.colors.background
+              backgroundColor: theme.colors.background,
+              height: 32,
+              position: "absolute",
             }
           }}
         />

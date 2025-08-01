@@ -8,14 +8,14 @@ export const SchedulerStyles = (theme, width) =>  StyleSheet.create({
         paddingRight: width < 1000 ? '1em' : '2em',
         borderRadius: 3,
         boxShadow: '-1px -1px 1px 1px #81858a inset',
-        width: width < 900 ? '60vw' : '20vw'
+        width: width < 900 ? '40vw' : '20vw'
     },
     courseContainerDisabled: {
         display: 'inline-block',
         backgroundColor: theme.colors.surfaceVariant,
         paddingRight: width < 1000 ? '1em' : '2em',
         border: '0 0 0 1px solid black',
-        width: width < 900 ? '60vw' : '20vw'
+        width: width < 900 ? '40vw' : '20vw'
     },
     courseInternalContainer: {
         marginRight: width < 1000 ? '0' : "1em",
