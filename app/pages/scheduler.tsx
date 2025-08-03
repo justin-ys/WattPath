@@ -27,7 +27,7 @@ import { Gesture, GestureDetector } from "react-native-gesture-handler";
 
 export default function SchedulerPage() {
     const { height: screenHeight, width: screenWidth } = useWindowDimensions();
-    const {terms, addCourse} = useSchedule();
+    const {terms, addCourse, deleteCourse} = useSchedule();
     const theme = useTheme();
     const courseRefs: React.RefObject<any>[] = [];
     const [isDraggedOn, setIsDraggedOn] = useState<{[key: number]: boolean}>({});
@@ -109,6 +109,10 @@ export default function SchedulerPage() {
         runOnJS(collapseSheet)();
     })
 
+    const onDelete = (termNum: number, course: Course) => () => {
+        deleteCourse(course.id);
+    }
+
     return (
         <>
         <div className="flex flex-col gap-10 max-h-full">
@@ -129,6 +133,8 @@ export default function SchedulerPage() {
                                         key={course.id || course.title}
                                         title={course.title}
                                         description={course.description || ""}
+                                        onDelete={onDelete(idx, course)}
+                                        closeable={true}
                                     />
                                 ))}
                             </CourseColumn>

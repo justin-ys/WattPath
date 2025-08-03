@@ -1,19 +1,19 @@
 import * as React from 'react';
-import {List, Portal} from 'react-native-paper';
-import { Text } from 'react-native-paper';
+import {List, Portal, IconButton} from 'react-native-paper';
+import { Text, Button } from 'react-native-paper';
 import { SchedulerStyles } from "@/app/styles/schedulerStyles";
-import star from "@/assets/images/star_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.png"
 import SchedulerPage from "@/app/pages/scheduler";
 import { GestureDetector, Gesture } from 'react-native-gesture-handler';
 import Animated, {
     useAnimatedStyle,
     useSharedValue,
     runOnJS,
-    withSpring
+    withSpring,
+    withTiming
 } from 'react-native-reanimated';
 import { View } from 'react-native';
-import {transferableAbortController} from "node:util";
 import useInternalStyles from "@/app/hooks/useInternalStyles";
+import { useEffect, useState } from 'react';
 
 import {HEADER_SIZE} from "@/app/constants"
 
@@ -23,6 +23,8 @@ interface CourseDisplayProps {
     specialDescription?: string;
     disabled?: boolean;
     draggable?: boolean;
+    closeable?: boolean;
+    onDelete?: () => void;
     onDragStart?: () => void;
     onDragEnd?: (x: number, y: number) => void;
     onDrop?: (x: number, y: number) => void;
@@ -37,14 +39,33 @@ export default function CourseDisplay(props: CourseDisplayProps) {
     const originalOpacity = useSharedValue(1);
     const startX = useSharedValue(0);
     const startY = useSharedValue(0);
+    const isDeleting = useSharedValue(false);
     
     const originalRef = React.useRef<View>(null);
+    const containerRef = React.useRef<any>(null);
 
     const measureOriginalPosition = () => {
         if (originalRef.current) {
             originalRef.current.measureInWindow((x, y, width, height) => {
                 startX.value = y - HEADER_SIZE; // why are they swapped???
                 startY.value = x;
+            });
+        }
+    };
+    const height = useSharedValue(0);
+    const margin = useSharedValue(8);
+
+    const handleDelete = () => {
+        if (props.onDelete && !isDeleting.value) {
+            height.value = containerRef.current.clientHeight;
+            isDeleting.value = true;
+            // Animate scaleY to 0 to collapse the height
+            margin.value = withTiming(0, { duration: 50 });
+            height.value = withTiming(0, { duration: 100 }, (finished) => {
+                if (finished) {
+                    // Call the delete function after animation completes
+                    runOnJS(props.onDelete!)();
+                }
             });
         }
     };
@@ -125,6 +146,14 @@ export default function CourseDisplay(props: CourseDisplayProps) {
         };
     });
 
+    const containerStyle = useAnimatedStyle(() => {
+        return {
+            height: isDeleting.value ?  height.value : (height.value || '100%'),
+            overflow: 'hidden',
+            marginBottom: margin.value
+        };
+    });
+
     const enabledStyle = useInternalStyles(SchedulerStyles).courseContainerEnabled;
     const disabledStyle = useInternalStyles(SchedulerStyles).courseContainerDisabled;
     const enabledTextStyle = useInternalStyles(SchedulerStyles).courseTitleEnabled;
@@ -142,26 +171,33 @@ export default function CourseDisplay(props: CourseDisplayProps) {
                 </View>
             }
             left={props => <List.Icon {...props} icon="star" />}
+            right={rightProps => props.closeable ? <IconButton icon="close" size={24} onPress={handleDelete} /> : <></>}
         />
     );
 
     if (props.draggable) {
         return (
-            <View>
-                <GestureDetector gesture={panGesture}>
-                    <Animated.View style={originalStyle} ref={originalRef}>
-                        {courseItem}
-                    </Animated.View>
-                </GestureDetector>
+            <Animated.View style={containerStyle} ref={containerRef}>
+                <View>
+                    <GestureDetector gesture={panGesture}>
+                        <Animated.View style={originalStyle} ref={originalRef}>
+                            {courseItem}
+                        </Animated.View>
+                    </GestureDetector>
 
-                <Portal>
-                    <Animated.View style={dragCloneStyle}>
-                        {courseItem}
-                    </Animated.View>
-                </Portal>
-            </View>
+                    <Portal>
+                        <Animated.View style={dragCloneStyle}>
+                            {courseItem}
+                        </Animated.View>
+                    </Portal>
+                </View>
+            </Animated.View>
         );
     }
 
-    return courseItem;
+    return (
+        <Animated.View style={containerStyle} ref={containerRef}>
+            {courseItem}
+        </Animated.View>
+    );
 }

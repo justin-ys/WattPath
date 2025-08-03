@@ -5,7 +5,6 @@ export const SchedulerStyles = (theme, width) =>  StyleSheet.create({
     courseContainerEnabled: {
         display: 'inline-block',
         backgroundColor: theme.colors.background,
-        paddingRight: width < 1000 ? '1em' : '2em',
         borderRadius: 3,
         boxShadow: '-1px -1px 1px 1px #81858a inset',
         width: width < 900 ? '40vw' : '20vw'
@@ -42,6 +41,11 @@ export const SchedulerStyles = (theme, width) =>  StyleSheet.create({
         display: 'flex',
         flexDirection: 'column',
         overflow: 'scroll',
+    },
+    courseColumn: {
+        minWidth: width < 900 ? '41vw' : '21vw',
+        minHeight: '10vw',
+        maxHeight: '100%',
     },
     courseColumnOverlay: {
         position: 'absolute',

@@ -57,6 +57,14 @@ export function useSchedule() {
         }
     }
 
+    const deleteCourse = (courseId: number) => {
+        setTerms(prevTerms =>
+            prevTerms.map((term, idx) => {
+                return {...term, courses: term.courses.filter(c => c.id !== courseId)}
+            })
+        );
+    }
+
     const newTerm = () => {
         setTerms(prevTerms => [...prevTerms, {}])
     }
@@ -64,6 +72,7 @@ export function useSchedule() {
     return {
         terms,
         addCourse,
+        deleteCourse,
         newTerm
     }
 }
