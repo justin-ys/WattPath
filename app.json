@@ -38,76 +38,81 @@
         {
           "fonts": [
             {
-              "file": "./assets/fonts/Roboto-Thin.ttf",
               "fontFamily": "Roboto",
-              "fontWeight": "100",
-              "fontStyle": "normal"
-            },
-            {
-              "file": "./assets/fonts/Roboto-ThinItalic.ttf",
-              "fontFamily": "Roboto",
-              "fontWeight": "100",
-              "fontStyle": "italic"
-            },
-            {
-              "file": "./assets/fonts/Roboto-Light.ttf",
-              "fontFamily": "Roboto",
-              "fontWeight": "300",
-              "fontStyle": "normal"
-            },
-            {
-              "file": "./assets/fonts/Roboto-LightItalic.ttf",
-              "fontFamily": "Roboto",
-              "fontWeight": "300",
-              "fontStyle": "italic"
-            },
-            {
-              "file": "./assets/fonts/Roboto-Regular.ttf",
-              "fontFamily": "Roboto",
-              "fontWeight": "400",
-              "fontStyle": "normal"
-            },
-            {
-              "file": "./assets/fonts/Roboto-Italic.ttf",
-              "fontFamily": "Roboto",
-              "fontWeight": "400",
-              "fontStyle": "italic"
-            },
-            {
-              "file": "./assets/fonts/Roboto-Medium.ttf",
-              "fontFamily": "Roboto",
-              "fontWeight": "500",
-              "fontStyle": "normal"
-            },
-            {
-              "file": "./assets/fonts/Roboto-MediumItalic.ttf",
-              "fontFamily": "Roboto",
-              "fontWeight": "500",
-              "fontStyle": "italic"
-            },
-            {
-              "file": "./assets/fonts/Roboto-Bold.ttf",
-              "fontFamily": "Roboto",
-              "fontWeight": "700",
-              "fontStyle": "normal"
-            },
-            {
-              "file": "./assets/fonts/Roboto-BoldItalic.ttf",
-              "fontFamily": "Roboto",
-              "fontWeight": "700",
-              "fontStyle": "italic"
-            },
-            {
-              "file": "./assets/fonts/Roboto-Black.ttf",
-              "fontFamily": "Roboto",
-              "fontWeight": "900",
-              "fontStyle": "normal"
-            },
-            {
-              "file": "./assets/fonts/Roboto-BlackItalic.ttf",
-              "fontFamily": "Roboto",
-              "fontWeight": "900",
-              "fontStyle": "italic"
+              "fontDefinitions": [
+                {
+                  "file": "./assets/fonts/Roboto-Thin.ttf",
+                  "fontFamily": "Roboto",
+                  "fontWeight": "100",
+                  "fontStyle": "normal"
+                },
+                {
+                  "file": "./assets/fonts/Roboto-ThinItalic.ttf",
+                  "fontFamily": "Roboto",
+                  "fontWeight": "100",
+                  "fontStyle": "italic"
+                },
+                {
+                  "file": "./assets/fonts/Roboto-Light.ttf",
+                  "fontFamily": "Roboto",
+                  "fontWeight": "300",
+                  "fontStyle": "normal"
+                },
+                {
+                  "file": "./assets/fonts/Roboto-LightItalic.ttf",
+                  "fontFamily": "Roboto",
+                  "fontWeight": "300",
+                  "fontStyle": "italic"
+                },
+                {
+                  "file": "./assets/fonts/Roboto-Regular.ttf",
+                  "fontFamily": "Roboto",
+                  "fontWeight": "400",
+                  "fontStyle": "normal"
+                },
+                {
+                  "file": "./assets/fonts/Roboto-Italic.ttf",
+                  "fontFamily": "Roboto",
+                  "fontWeight": "400",
+                  "fontStyle": "italic"
+                },
+                {
+                  "file": "./assets/fonts/Roboto-Medium.ttf",
+                  "fontFamily": "Roboto",
+                  "fontWeight": "500",
+                  "fontStyle": "normal"
+                },
+                {
+                  "file": "./assets/fonts/Roboto-MediumItalic.ttf",
+                  "fontFamily": "Roboto",
+                  "fontWeight": "500",
+                  "fontStyle": "italic"
+                },
+                {
+                  "file": "./assets/fonts/Roboto-Bold.ttf",
+                  "fontFamily": "Roboto",
+                  "fontWeight": "700",
+                  "fontStyle": "normal"
+                },
+                {
+                  "file": "./assets/fonts/Roboto-BoldItalic.ttf",
+                  "fontFamily": "Roboto",
+                  "fontWeight": "700",
+                  "fontStyle": "italic"
+                },
+                {
+                  "file": "./assets/fonts/Roboto-Black.ttf",
+                  "fontFamily": "Roboto",
+                  "fontWeight": "900",
+                  "fontStyle": "normal"
+                },
+                {
+                  "file": "./assets/fonts/Roboto-BlackItalic.ttf",
+                  "fontFamily": "Roboto",
+                  "fontWeight": "900",
+                  "fontStyle": "italic"
+                }
+              ]
             }
           ]
         }
