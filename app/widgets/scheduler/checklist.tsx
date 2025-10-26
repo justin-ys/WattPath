@@ -129,33 +129,36 @@ export default function Checklist(props: ChecklistProps) {
         }
     ]
     const program = "CS/Digital Hardware"
-    return <div style={{maxHeight: '80%', display: 'flex', flexDirection: 'column'}}>
-        {props.showProgram && <Text style={useInternalStyles(SchedulerStyles).checklistProgram} variant="titleMedium">Requirements for <i>{program}</i></Text>}
-        <div style={{overflowX: 'scroll'}} className="flex flex-row gap-2 mt-2 justify-start">
+    return <View style={{maxHeight: '80%', display: 'flex', flexDirection: 'column'}}>
+        {props.showProgram ? <Text style={useInternalStyles(SchedulerStyles).checklistProgram} variant="titleMedium">Requirements for <i>{program}</i></Text> : null}
+        <View className="flex flex-row gap-2 mt-2 justify-start overflow-x-scroll max-h-full">
         {requirements.map(requirement =>
-            <div className="flex flex-col gap-2 min-h-0">
-                <div className="flex flex-row gap-2 items-center flex-shrink-0">
+            <View className="flex flex-col gap-2 min-h-0">
+                <View className="flex flex-row gap-2 items-center flex-shrink-0">
                     <Text variant="headlineSmall">{requirement.label}</Text>
                     <Text variant="titleMedium" style={useInternalStyles(SchedulerStyles).checklistUnits}>({requirement.completedUnits}/{requirement.totalUnits})</Text>
-                </div>
-                <div style={{
+                </View>
+                <View style={{
                     flex: 1,
                     minHeight: 0,
                     overflow: 'scroll'
                 }}>
-                    <CourseColumn>
+                    <CourseColumn id={`checklist-${requirement.label}`}>
                     {requirement.courses.map((course: Course) => {
-                        return <CourseDisplay title={course.title}
-                                              description={course.description || ""}
-                                              onDrop={(x, y) => props.onCourseDrop(x, y, course)}
-                                              onDragUpdate={(x, y) => props.onDragUpdate(x, y, course)}
-                                              onDragEnd={(x, y) => props.onDragEnd(x, y, course)}
-                                              onDragStart={props.onDragStart}
-                                              draggable />
+                        return <CourseDisplay
+                            key={course.id}
+                            title={course.title}
+                            description={course.description || ""}
+                            draggable={true}
+                            onDragStart={props.onDragStart}
+                            onDragMove={(x, y) => props.onDragUpdate(x, y, course)}
+                            onDragEnd={(x, y) => props.onDragEnd(x, y, course)}
+
+                        />
                     })}
                     </CourseColumn>
-                </div>
-            </div>)}
-        </div>
-    </div>
+                </View>
+            </View>)}
+        </View>
+    </View>
 }

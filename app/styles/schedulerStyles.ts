@@ -22,12 +22,12 @@ export const SchedulerStyles = (theme, width) =>  StyleSheet.create({
     },
     courseTitleEnabled: {
         fontFamily: 'Roboto',
-        fontSize: '1.5em',
+        fontSize: 15,
         color: theme.colors.primary,
     },
     courseTitleDisabled: {
         fontFamily: 'Roboto',
-        fontSize: '1.5em',
+        fontSize: 15,
         color: theme.colors.secondary,
     },
     courseDescription: {

@@ -8,7 +8,7 @@ import {
 } from 'react-native-paper-tabs';
 import Checklist from "@/app/widgets/scheduler/checklist";
 import Problems from "@/app/widgets/scheduler/problems";
-import {useEffect, useRef, useState, useMemo} from "react";
+import {useEffect, useRef, useState, useMemo, useCallback} from "react";
 import Term from "@/app/types/term";
 import {Course} from "@/app/types/course";
 import {useSchedule} from "@/app/hooks/useSchedule";
@@ -23,59 +23,21 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useTheme } from "react-native-paper";
 import useIsMobile from "@/app/hooks/useIsMobile";
-import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 
 export default function SchedulerPage() {
     const { height: screenHeight, width: screenWidth } = useWindowDimensions();
     const {terms, addCourse, deleteCourse} = useSchedule();
     const theme = useTheme();
-    const courseRefs: React.RefObject<any>[] = [];
+    const [isDragging, setIsDragging] = useState(false);
     const [isDraggedOn, setIsDraggedOn] = useState<{[key: number]: boolean}>({});
+    const courseRefs: React.RefObject<View>[] = [];
 
-    // Check if we're on mobile
-    const isMobile = useIsMobile();
+    const isMobile = useIsMobile(); 
 
-    // Animation values
     const translateY = useSharedValue(screenHeight);
     const regionTranslateY = useSharedValue(screenHeight*0.3);
     const isExpanded = useSharedValue(false);
-
-    const onCourseDrop = (x: number, y: number, course: Course) => {
-        courseRefs.forEach((ref, idx) => {
-            const rect = ref.current?.getBoundingClientRect();
-            if (ref.current &&
-                x >= rect.left &&
-                x <= rect.right &&
-                y <= rect.bottom - HEADER_SIZE && // something to do with the header idk never change the size of the header
-                y >= rect.top - HEADER_SIZE) {
-                addCourse(idx, course);
-            }
-        });
-    }
-
-    const onDragUpdate = (x: number, y: number, course: Course) => {
-        courseRefs.forEach((ref, idx) => {
-            const rect = ref.current?.getBoundingClientRect();
-            if (ref.current &&
-                x >= rect.left &&
-                x <= rect.right &&
-                y <= rect.bottom - HEADER_SIZE &&
-                y >= rect.top - HEADER_SIZE) {
-                    setIsDraggedOn(prevIsDraggedOn => ({
-                        ...prevIsDraggedOn,
-                        [idx]: true
-                    }))
-            }
-            else setIsDraggedOn(prevIsDraggedOn => ({
-                ...prevIsDraggedOn,
-                [idx]: false
-            }))
-        })
-    }
-
-    const onDragEnd = (x: number, y: number, course: Course) => {
-        setIsDraggedOn({})
-    }
 
     const expandSheet = () => {
         translateY.value = withSpring(0, {overshootClamping: true})
@@ -97,13 +59,6 @@ export default function SchedulerPage() {
         transform: [{ translateY: regionTranslateY.value }],
     }));
 
-    // Modify onDragStart to collapse sheet
-    const onDragStart = () => {
-        if (isExpanded.value) {
-            collapseSheet();
-        }
-    };
-
     const tapRegion = Gesture.Tap()
     .onFinalize(() => {
         runOnJS(collapseSheet)();
@@ -113,9 +68,50 @@ export default function SchedulerPage() {
         deleteCourse(course.id);
     }
 
+    const handleDragStart = () => {
+        setIsDragging(true);
+        if (isExpanded.value) {
+            collapseSheet();
+        }
+    };
+
+    const handleDragMove = (x: number, y: number, course: Course) => {
+        courseRefs.forEach((ref, idx) => {
+            if (ref && ref.current) {
+                ref.current.measure((fx, fy, width, height, px, py) => {
+                    if (x >= px &&
+                        x <= px + width &&
+                        y <= py + height - HEADER_SIZE &&
+                        y >= py - HEADER_SIZE) {
+                            setIsDraggedOn(prevIsDraggedOn => ({
+                                ...prevIsDraggedOn,
+                                [idx]: true
+                            }))
+                    } else {
+                        setIsDraggedOn(prevIsDraggedOn => ({
+                            ...prevIsDraggedOn,
+                            [idx]: false
+                        }))
+                    }
+                });
+            }
+        })
+    };
+
+    const handleDragEnd = (x, y, course: Course) => {
+        setIsDragging(false);
+        Object.keys(isDraggedOn).forEach(idx => {
+            if (isDraggedOn[idx]) addCourse(idx, course);
+        }
+        )
+        setIsDraggedOn({});
+    };
+
+    const handleDrop = (termIndex: number, courseData: any) => {
+    };
+
     return (
-        <>
-        <div className="flex flex-col gap-10 max-h-full">
+        <View className="flex flex-col gap-10 max-h-full">
             <ScheduleRow>
                 {terms.map((term, idx) => {
                     const courseRef = useRef(null);
@@ -126,9 +122,11 @@ export default function SchedulerPage() {
                                 term={term.level}
                                 date={`${term.season} ${term.year}`}
                                 isDraggingOn={isDraggedOn[idx] || false}
+                                id={idx.toString()}
+                                onDrop={(courseData) => handleDrop(idx, courseData)}
                                 ref={courseRef}
                             >
-                                {term.courses.map((course: Course) => (
+                                {term.courses.map((course: any) => (
                                     <CourseDisplay
                                         key={course.id || course.title}
                                         title={course.title}
@@ -142,96 +140,93 @@ export default function SchedulerPage() {
                     );
                 })}
             </ScheduleRow>
-        </div>
 
-        {/* Mobile: Collapsible Bottom Sheet */}
-        {isMobile && (
-            <>
-                {/* Floating Action Button */}
-                <FAB
-                    icon={"format-list-checks"}
-                    style={{
-                        position: 'absolute',
-                        margin: 16,
-                        bottom: 16,
-                        right: 16,
-                    }}
-                    onPress={expandSheet}
-                />
-
-                <GestureDetector gesture={tapRegion}>
-                    <Animated.View style={[
-                        {
-                            height: screenHeight * 0.3,
-                            opacity: 0,
-                            top: screenHeight * 0.3,
-                            left: 0,
-                            right: 0
-                        },
-                        clickRegionAnimatedStyle,
-                    ]} />
-                </GestureDetector>
-
-                <Animated.View
-                    style={[
-                        {
+            {isMobile ? (
+                <>
+                    <FAB
+                        icon={"format-list-checks"}
+                        style={{
                             position: 'absolute',
-                            bottom: 0,
-                            left: 0,
-                            right: 0,
-                            height: screenHeight * 0.7,
-                            borderTopLeftRadius: 20,
-                            borderTopRightRadius: 20,
-                            shadowColor: '#000',
-                            backgroundColor: theme.colors.background,
-                            shadowOffset: { width: 0, height: -2 },
-                            shadowOpacity: 0.25,
-                            shadowRadius: 3.84,
-                            elevation: 5,
-                        },
-                        animatedStyle,
-                    ]}
-                >
-                    <View style={{ flex: 1, paddingHorizontal: 16, paddingVertical: 4 }}>
-                        <TabsProvider defaultIndex={0}>
-                            <Tabs style={{ flex: 1 }}>
-                                <TabScreen label="Checklist">
-                                    <Checklist
-                                        onCourseDrop={onCourseDrop}
-                                        onDragUpdate={onDragUpdate}
-                                        onDragEnd={onDragEnd}
-                                        onDragStart={onDragStart}
-                                    />
-                                </TabScreen>
-                                <TabScreen label="Problems">
-                                    <Problems />
-                                </TabScreen>
-                            </Tabs>
-                        </TabsProvider>
-                    </View>
-                </Animated.View>
-            </>
-        )}
+                            margin: 16,
+                            bottom: 16,
+                            right: 16,
+                        }}
+                        onPress={expandSheet}
+                    />
 
-        {/* Desktop: Regular Tabs */}
-        {!isMobile && (
-            <TabsProvider defaultIndex={0}>
-                <Tabs style={{ marginBottom: 20, overflow: 'scroll' }}
-                        tabHeaderStyle={{ display: 'flex', alignItems: 'flex-start' }}>
-                    <TabScreen label="Checklist">
-                        <Checklist 
-                            onCourseDrop={onCourseDrop} 
-                            onDragUpdate={onDragUpdate} 
-                            onDragEnd={onDragEnd} 
-                            showProgram={true}
-                        />
-                    </TabScreen>
-                    <TabScreen label="Problems">
-                        <Problems />
-                    </TabScreen>
-                </Tabs>
-            </TabsProvider>
-        )}
-        </>
+                    <GestureDetector gesture={tapRegion}>
+                        <Animated.View style={[
+                            {
+                                height: screenHeight * 0.3,
+                                opacity: 0,
+                                top: screenHeight * 0.3,
+                                left: 0,
+                                right: 0
+                            },
+                            clickRegionAnimatedStyle,
+                        ]} />
+                    </GestureDetector>
+
+                    <Animated.View
+                        style={[
+                            {
+                                position: 'absolute',
+                                bottom: 0,
+                                left: 0,
+                                right: 0,
+                                height: screenHeight * 0.7,
+                                borderTopLeftRadius: 20,
+                                borderTopRightRadius: 20,
+                                shadowColor: '#000',
+                                backgroundColor: theme.colors.background,
+                                shadowOffset: { width: 0, height: -2 },
+                                shadowOpacity: 0.25,
+                                shadowRadius: 3.84,
+                                elevation: 5,
+                            },
+                            animatedStyle,
+                        ]}
+                    >
+                        <View style={{ flex: 1, paddingHorizontal: 16, paddingVertical: 4 }}>
+                            <TabsProvider defaultIndex={0}>
+                                <Tabs style={{ flex: 1 }}>
+                                    <TabScreen label="Checklist">
+                                        <Checklist
+                                            onCourseDrop={() => {}} // No longer needed with dnd-kit
+                                            onDragUpdate={() => {}} // No longer needed with dnd-kit
+                                            onDragEnd={() => {}} // No longer needed with dnd-kit
+                                            onDragStart={() => {}} // No longer needed with dnd-kit
+                                            showProgram={false}
+                                        />
+                                    </TabScreen>
+                                    <TabScreen label="Problems">
+                                        <Problems />
+                                    </TabScreen>
+                                </Tabs>
+                            </TabsProvider>
+                        </View>
+                    </Animated.View>
+                </>
+            ) : null}
+
+            {!isMobile ? (
+                <TabsProvider defaultIndex={0}>
+                    <Tabs style={{ marginBottom: 20, overflow: 'scroll' }}
+                            tabHeaderStyle={{ display: 'flex', alignItems: 'flex-start' }}>
+                        <TabScreen label="Checklist">
+                            <Checklist 
+                                onDragStart={handleDragStart}
+                                onDragUpdate={handleDragMove}
+                                onDragEnd={handleDragEnd}
+                                showProgram={true}
+                            />
+                        </TabScreen>
+                        <TabScreen label="Problems">
+                            <Problems />
+                        </TabScreen>
+                    </Tabs>
+                </TabsProvider>
+            ) : null}
+        </View>
     );
 }

@@ -3,17 +3,18 @@ import {List, Portal, IconButton} from 'react-native-paper';
 import { Text, Button } from 'react-native-paper';
 import { SchedulerStyles } from "@/app/styles/schedulerStyles";
 import SchedulerPage from "@/app/pages/scheduler";
-import { GestureDetector, Gesture } from 'react-native-gesture-handler';
+import { View, PanResponder, Dimensions } from 'react-native';
 import Animated, {
     useAnimatedStyle,
     useSharedValue,
     runOnJS,
-    withSpring,
-    withTiming
+    withTiming,
+    Easing,
+    measure
 } from 'react-native-reanimated';
-import { View } from 'react-native';
 import useInternalStyles from "@/app/hooks/useInternalStyles";
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
+import { Modal } from 'react-native';
 
 import {HEADER_SIZE} from "@/app/constants"
 
@@ -25,132 +26,100 @@ interface CourseDisplayProps {
     draggable?: boolean;
     closeable?: boolean;
     onDelete?: () => void;
-    onDragStart?: () => void;
+    draggableId?: string;
+    dragData?: any;
+    onDragStart?: (data: any) => void;
+    onDragMove?: (x: number, y: number) => void;
     onDragEnd?: (x: number, y: number) => void;
-    onDrop?: (x: number, y: number) => void;
-    onDragUpdate?: (x: number, y: number) => void;
 }
 
 export default function CourseDisplay(props: CourseDisplayProps) {
-    const translateX = useSharedValue(0);
-    const translateY = useSharedValue(0);
-    const scale = useSharedValue(1);
-    const isDragging = useSharedValue(false);
-    const originalOpacity = useSharedValue(1);
-    const startX = useSharedValue(0);
-    const startY = useSharedValue(0);
     const isDeleting = useSharedValue(false);
-    
-    const originalRef = React.useRef<View>(null);
     const containerRef = React.useRef<any>(null);
-
-    const measureOriginalPosition = () => {
-        if (originalRef.current) {
-            originalRef.current.measureInWindow((x, y, width, height) => {
-                startX.value = y - HEADER_SIZE; // why are they swapped???
-                startY.value = x;
-            });
-        }
-    };
     const height = useSharedValue(0);
     const margin = useSharedValue(8);
+    
+    const isDragging = useSharedValue(false);
+    const dragPositionX = useSharedValue(0);
+    const dragPositionY = useSharedValue(0);
+    const [showDragOverlay, setShowDragOverlay] = useState(false);
+    const overlayScale = useSharedValue(0.8);
+
+    const originalRef = React.useRef<View>(null);
+
+    const panResponder = React.useMemo(() => {
+        if (!props.draggable) return null;
+
+        return PanResponder.create({
+            onStartShouldSetPanResponder: () => true,
+            onMoveShouldSetPanResponder: (_, gestureState) => {
+                return Math.abs(gestureState.dx) > 10 || Math.abs(gestureState.dy) > 10;
+            },
+            onPanResponderGrant: (evt) => {
+                isDragging.value = true;
+                
+                const { pageX, pageY } = evt.nativeEvent;
+                const pageXOffset = pageX - 120;
+                const pageYOffset = pageY - 40
+                dragPositionX.value = pageXOffset;
+                dragPositionY.value = pageYOffset;
+                setShowDragOverlay(true);
+                
+                overlayScale.value = withTiming(1.05, { duration: 150, easing: Easing.out(Easing.quad) });
+                
+                if (props.onDragStart && props.dragData) {
+                    props.onDragStart(props.dragData);
+                }
+            },
+            onPanResponderMove: (evt, gestureState) => {
+                const { pageX, pageY } = evt.nativeEvent;
+                dragPositionX.value = pageX - 120;
+                dragPositionY.value = pageY - 40;
+                
+                if (props.onDragMove) {
+                    props.onDragMove(pageX, pageY);
+                }
+            },
+            onPanResponderRelease: (_, gestureState) => {
+                overlayScale.value = withTiming(0.8, { duration: 150, easing: Easing.in(Easing.quad) }, (finished) => {
+                    if (finished) {
+                        runOnJS(setShowDragOverlay)(false);
+                    }
+                });
+
+                originalRef.current?.measure((x, y, width, height, pageX, pageY) => {
+                    dragPositionX.value = withTiming(pageX, {duration: 100, easing: Easing.in(Easing.quad) }, (_) => {
+                        isDragging.value = false;
+                    })
+                    dragPositionY.value = withTiming(pageY, {duration: 100, easing: Easing.in(Easing.quad) });
+    
+                    if (props.onDragEnd) {
+                        props.onDragEnd(x, y);
+                    }
+                })
+            }
+        });
+    }, [props.draggable, props.dragData, props.onDragStart, props.onDragMove, props.onDragEnd]);
 
     const handleDelete = () => {
         if (props.onDelete && !isDeleting.value) {
             height.value = containerRef.current.clientHeight;
             isDeleting.value = true;
-            // Animate scaleY to 0 to collapse the height
-            margin.value = withTiming(0, { duration: 50 });
-            height.value = withTiming(0, { duration: 100 }, (finished) => {
+            margin.value = withTiming(0, { duration: 80 });
+            height.value = withTiming(0, { duration: 150, easing: Easing.inOut(Easing.cubic) }, (finished) => {
                 if (finished) {
-                    // Call the delete function after animation completes
                     runOnJS(props.onDelete!)();
                 }
             });
         }
     };
 
-    const panGesture = Gesture.Pan()
-        .manualActivation(true)
-        .onTouchesDown((event, manager) => {
-            // Only activate on valid touches
-            if (event.allTouches.length === 1) {
-                manager.activate();
-            }
-        })
-        .activateAfterLongPress(2000)
-        .onStart(() => {
-            runOnJS(measureOriginalPosition)();
-            isDragging.value = true;
-            originalOpacity.value = 0.3;
-            scale.value = withSpring(1.05);
-            if (props.onDragStart) {
-                console.log("drag start");
-                runOnJS(props.onDragStart)();
-            }
-        })
-        .onUpdate((event) => {
-            translateX.value = event.translationX;
-            translateY.value = event.translationY;
-
-            const updateX = startY.value + translateX.value
-            const updateY = startX.value + translateY.value
-
-            if (props.onDragUpdate) {
-                runOnJS(props.onDragUpdate)(updateX, updateY);
-            }
-        })
-        .onEnd((event) => {
-            isDragging.value = false;
-            originalOpacity.value = 1;
-
-            translateX.value = withSpring(startY.value);
-            translateY.value = withSpring(startX.value);
-            scale.value = withSpring(1);
-
-            const finalX = startY.value + translateX.value;
-            const finalY = startX.value + translateY.value;
-
-            console.log(finalX, finalY);
-
-            if (props.onDragEnd) {
-                runOnJS(props.onDragEnd)(finalX, finalY);
-            }
-            
-            if (props.onDrop) {
-                runOnJS(props.onDrop)(finalX, finalY);
-            }
-        });
-
-    const originalStyle = useAnimatedStyle(() => {
-        return {
-            opacity: originalOpacity.value,
-            zIndex: 2
-        };
-    });
-
-    const dragCloneStyle = useAnimatedStyle(() => {
-        return {
-            position: 'absolute',
-            top: startX.value,
-            left: startY.value,
-            transform: [
-                { translateX: translateX.value },
-                { translateY: translateY.value },
-                { scale: scale.value },
-            ],
-            zIndex: 1,
-            elevation: 1,
-            opacity: isDragging.value ? 1 : 0,
-            pointerEvents: 'none',
-        };
-    });
-
     const containerStyle = useAnimatedStyle(() => {
         return {
             height: isDeleting.value ?  height.value : (height.value || '100%'),
             overflow: 'hidden',
-            marginBottom: margin.value
+            marginBottom: margin.value,
+            opacity: isDragging.value ? 0 : 1,
         };
     });
 
@@ -158,6 +127,8 @@ export default function CourseDisplay(props: CourseDisplayProps) {
     const disabledStyle = useInternalStyles(SchedulerStyles).courseContainerDisabled;
     const enabledTextStyle = useInternalStyles(SchedulerStyles).courseTitleEnabled;
     const disabledTextStyle = useInternalStyles(SchedulerStyles).courseTitleDisabled;
+    const specialDescriptionStyle = useInternalStyles(SchedulerStyles).courseSpecialDescription
+    const courseDescriptionStyle = useInternalStyles(SchedulerStyles).courseDescription
 
     const courseItem = (
         <List.Item 
@@ -166,8 +137,8 @@ export default function CourseDisplay(props: CourseDisplayProps) {
             contentStyle={useInternalStyles(SchedulerStyles).courseInternalContainer}
             description={
                 <View>
-                    {props.specialDescription ? <Text style={useInternalStyles(SchedulerStyles).courseSpecialDescription}>{props.specialDescription}</Text> : null}
-                    <Text style={useInternalStyles(SchedulerStyles).courseDescription}>{props.description}</Text>
+                    {props.specialDescription ? <Text style={specialDescriptionStyle}>{props.specialDescription}</Text> : null}
+                    <Text style={courseDescriptionStyle}>{props.description}</Text>
                 </View>
             }
             left={props => <List.Icon {...props} icon="star" />}
@@ -175,29 +146,68 @@ export default function CourseDisplay(props: CourseDisplayProps) {
         />
     );
 
-    if (props.draggable) {
+    if (!props.draggable) {
         return (
-            <Animated.View style={containerStyle} ref={containerRef}>
-                <View>
-                    <GestureDetector gesture={panGesture}>
-                        <Animated.View style={originalStyle} ref={originalRef}>
-                            {courseItem}
-                        </Animated.View>
-                    </GestureDetector>
-
-                    <Portal>
-                        <Animated.View style={dragCloneStyle}>
-                            {courseItem}
-                        </Animated.View>
-                    </Portal>
-                </View>
-            </Animated.View>
+            <View>
+                <Animated.View style={containerStyle} ref={containerRef}>
+                    {courseItem}
+                </Animated.View>
+            </View>
         );
     }
 
+    const dragStyle = useAnimatedStyle(() => ({
+        left: Math.max(10, Math.min(dragPositionX.value, Dimensions.get('window').width - 240)),
+        top: Math.max(10, Math.min(dragPositionY.value, Dimensions.get('window').height - 100)),
+    }))
+
     return (
-        <Animated.View style={containerStyle} ref={containerRef}>
-            {courseItem}
-        </Animated.View>
+        <>
+            <View ref={originalRef} {...(panResponder?.panHandlers || {})}>
+                <Animated.View 
+                    style={containerStyle} 
+                    ref={containerRef}
+                >
+                    {courseItem}
+                </Animated.View>
+            </View>
+            
+            {showDragOverlay ? (
+                <Portal>
+                    <Modal
+                        visible={showDragOverlay}
+                        transparent={true}
+                        animationType="none"
+                        pointerEvents="none"
+                        statusBarTranslucent={true}
+                    >
+                        <Animated.View
+                            style={[
+                                {
+                                    position: 'absolute',
+                                    zIndex: 9999,
+                                    elevation: 9999,
+                                    shadowColor: '#000',
+                                    shadowOffset: { width: 0, height: 4 },
+                                    shadowOpacity: 0.3,
+                                    shadowRadius: 8,
+                                },
+                                dragStyle
+                            ]}
+                        >
+                            <Animated.View
+                                style={[
+                                    {
+                                        opacity: 0.9,
+                                    },
+                                ]}
+                            >
+                                {courseItem}
+                            </Animated.View>
+                        </Animated.View>
+                    </Modal>
+                </Portal>
+            ) : null}
+        </>
     );
 }
