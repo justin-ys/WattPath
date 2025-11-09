@@ -6,4 +6,6 @@ Very early build! Mostly UI at the moment.
 ### Building/running
 Install requirements: `npm install`
 
-Run the app: `npm run expo start`
+Run the app: `npx run expo start`
+
+Current only functional on desktop.
