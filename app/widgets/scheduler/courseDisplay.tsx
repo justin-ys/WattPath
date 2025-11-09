@@ -97,7 +97,10 @@ export default function CourseDisplay(props: CourseDisplayProps) {
                         props.onDragEnd(x, y);
                     }
                 })
-            }
+            },
+            onPanResponderTerminationRequest: (evt, gestureState) => {
+                return false; 
+            },
         });
     }, [props.draggable, props.dragData, props.onDragStart, props.onDragMove, props.onDragEnd]);
 
@@ -129,12 +132,13 @@ export default function CourseDisplay(props: CourseDisplayProps) {
     const disabledTextStyle = useInternalStyles(SchedulerStyles).courseTitleDisabled;
     const specialDescriptionStyle = useInternalStyles(SchedulerStyles).courseSpecialDescription
     const courseDescriptionStyle = useInternalStyles(SchedulerStyles).courseDescription
+    const contentStyle = useInternalStyles(SchedulerStyles).courseInternalContainer
 
     const courseItem = (
         <List.Item 
             title={<Text variant="titleLarge" style={props.disabled ? disabledTextStyle : enabledTextStyle}>{props.title}</Text>}
             style={props.disabled ? disabledStyle : enabledStyle}
-            contentStyle={useInternalStyles(SchedulerStyles).courseInternalContainer}
+            contentStyle={contentStyle}
             description={
                 <View>
                     {props.specialDescription ? <Text style={specialDescriptionStyle}>{props.specialDescription}</Text> : null}
@@ -146,6 +150,11 @@ export default function CourseDisplay(props: CourseDisplayProps) {
         />
     );
 
+    const dragStyle = useAnimatedStyle(() => ({
+        left: Math.max(10, Math.min(dragPositionX.value, Dimensions.get('window').width - 240)),
+        top: Math.max(10, Math.min(dragPositionY.value, Dimensions.get('window').height - 100)),
+    }))
+
     if (!props.draggable) {
         return (
             <View>
@@ -155,11 +164,6 @@ export default function CourseDisplay(props: CourseDisplayProps) {
             </View>
         );
     }
-
-    const dragStyle = useAnimatedStyle(() => ({
-        left: Math.max(10, Math.min(dragPositionX.value, Dimensions.get('window').width - 240)),
-        top: Math.max(10, Math.min(dragPositionY.value, Dimensions.get('window').height - 100)),
-    }))
 
     return (
         <>

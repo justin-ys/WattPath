@@ -6,6 +6,7 @@ import { Course } from "@/app/types/course";
 import { Season } from "@/app/types/season";
 import useInternalStyles from "@/app/hooks/useInternalStyles";
 import {View} from "react-native";
+import { useSchedule } from "@/app/hooks/useSchedule";
 
 interface ChecklistProps {
     onCourseDrop: (x: number, y: number, course: Course) => void,
@@ -128,6 +129,9 @@ export default function Checklist(props: ChecklistProps) {
             ]
         }
     ]
+
+    const { isScheduled } = useSchedule();
+
     const program = "CS/Digital Hardware"
     return <View style={{maxHeight: '80%', display: 'flex', flexDirection: 'column'}}>
         {props.showProgram ? <Text style={useInternalStyles(SchedulerStyles).checklistProgram} variant="titleMedium">Requirements for <i>{program}</i></Text> : null}
@@ -145,12 +149,15 @@ export default function Checklist(props: ChecklistProps) {
                 }}>
                     <CourseColumn id={`checklist-${requirement.label}`}>
                     {requirement.courses.map((course: Course) => {
+                        const scheduled = isScheduled(course.id) >= 0;
                         return <CourseDisplay
                             key={course.id}
                             title={course.title}
                             description={course.description || ""}
-                            draggable={true}
+                            draggable={!scheduled}
+                            disabled={scheduled}
                             onDragStart={props.onDragStart}
+                            dragData={course}
                             onDragMove={(x, y) => props.onDragUpdate(x, y, course)}
                             onDragEnd={(x, y) => props.onDragEnd(x, y, course)}
 

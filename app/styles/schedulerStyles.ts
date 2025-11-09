@@ -7,14 +7,14 @@ export const SchedulerStyles = (theme, width) =>  StyleSheet.create({
         backgroundColor: theme.colors.background,
         borderRadius: 3,
         boxShadow: '-1px -1px 1px 1px #81858a inset',
-        width: width < 900 ? '40vw' : '20vw'
+        width: width < 1200 ? '40vw' : '20vw'
     },
     courseContainerDisabled: {
         display: 'inline-block',
         backgroundColor: theme.colors.surfaceVariant,
         paddingRight: width < 1000 ? '1em' : '2em',
         border: '0 0 0 1px solid black',
-        width: width < 900 ? '40vw' : '20vw'
+        width: width < 1200 ? '40vw' : '20vw'
     },
     courseInternalContainer: {
         marginRight: width < 1000 ? '0' : "1em",
@@ -43,8 +43,8 @@ export const SchedulerStyles = (theme, width) =>  StyleSheet.create({
         overflow: 'scroll',
     },
     courseColumn: {
-        minWidth: width < 900 ? '41vw' : '21vw',
-        minHeight: '10vw',
+        minWidth: width < 1200 ? '41vw' : '21vw',
+        minHeight: '20vw',
         maxHeight: '100%',
     },
     courseColumnOverlay: {

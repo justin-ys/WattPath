@@ -1,48 +1,27 @@
-import {useState} from "react";
+import {useContext, useState} from "react";
 import {Course} from "@/app/types/course";
+import { ScheduleContext } from "../contexts/scheduleContext";
 
 export function useSchedule() {
-    const [terms, setTerms] = useState([
-        {
-            level: "1A",
-            season: "Fall",
-            year: 2024,
-            courses: [
-                {
-                    title: "SPCOM 225",
-                    id: 10,
-                    description: "Communications",
-                    units: 0.5,
-                    allowed_programs: ["CS/Digital Hardware"],
-                    terms_offered: ["Fall", "Winter"]
-                },
-            ],
-        },
-        {
-            level: "1B",
-            season: "Winter",
-            year: 2025,
-            courses: [
-                {
-                    title: "ECE 124",
-                    id: 11,
-                    description: "Digital Hardware",
-                    units: 0.5,
-                    allowed_programs: ["ECE"],
-                    terms_offered: ["Fall", "Winter"]
-                },
-            ]
-        }
-    ]);
+    const {terms, setTerms} = useContext(ScheduleContext)
 
-    const addCourse = (termNum: number, course: Course) => {
+    const isScheduled = (courseId: number) => {
+        let termIdx = 0;
         for (const term of terms) {
             for (const c of term.courses) {
-                if (c.id == course.id) {
-                    console.error(`Can't add ${course.id} to schedule: already present)`);
-                    return;
+                if (c.id == courseId) {
+                    return termIdx;
                 }
             }
+            termIdx++;
+        }
+        return -1;
+    }
+
+    const addCourse = (termNum: number, course: Course) => {
+        if (isScheduled(course.id) >= 0) {
+            console.error(`Can't add ${course.id} to schedule: already present)`);
+            return;
         }
         if (0 <= termNum && termNum < terms.length) {
             setTerms(prevTerms =>
@@ -73,6 +52,7 @@ export function useSchedule() {
         terms,
         addCourse,
         deleteCourse,
-        newTerm
+        newTerm,
+        isScheduled
     }
 }

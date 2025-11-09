@@ -68,7 +68,7 @@ export default function SchedulerPage() {
         deleteCourse(course.id);
     }
 
-    const handleDragStart = () => {
+    const handleDragStart = (course: Course) => {
         setIsDragging(true);
         if (isExpanded.value) {
             collapseSheet();
@@ -111,7 +111,7 @@ export default function SchedulerPage() {
     };
 
     return (
-        <View className="flex flex-col gap-10 max-h-full">
+        <View className="flex flex-col gap-10 h-full">
             <ScheduleRow>
                 {terms.map((term, idx) => {
                     const courseRef = useRef(null);
@@ -192,10 +192,9 @@ export default function SchedulerPage() {
                                 <Tabs style={{ flex: 1 }}>
                                     <TabScreen label="Checklist">
                                         <Checklist
-                                            onCourseDrop={() => {}} // No longer needed with dnd-kit
-                                            onDragUpdate={() => {}} // No longer needed with dnd-kit
-                                            onDragEnd={() => {}} // No longer needed with dnd-kit
-                                            onDragStart={() => {}} // No longer needed with dnd-kit
+                                            onDragStart={handleDragStart}
+                                            onDragUpdate={handleDragMove}
+                                            onDragEnd={handleDragEnd}
                                             showProgram={false}
                                         />
                                     </TabScreen>
