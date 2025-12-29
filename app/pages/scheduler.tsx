@@ -31,7 +31,8 @@ export default function SchedulerPage() {
     const theme = useTheme();
     const [isDragging, setIsDragging] = useState(false);
     const [isDraggedOn, setIsDraggedOn] = useState<{[key: number]: boolean}>({});
-    const courseRefs: React.RefObject<View>[] = [];
+    //const courseRefs: React.RefObject<View>[] = [];
+    const courseRefs = useRef([]);
 
     const isMobile = useIsMobile(); 
 
@@ -76,9 +77,9 @@ export default function SchedulerPage() {
     };
 
     const handleDragMove = (x: number, y: number, course: Course) => {
-        courseRefs.forEach((ref, idx) => {
-            if (ref && ref.current) {
-                ref.current.measure((fx, fy, width, height, px, py) => {
+        courseRefs.current.forEach((ref, idx) => {
+            if (ref) {
+                ref.measure((fx, fy, width, height, px, py) => {
                     if (x >= px &&
                         x <= px + width &&
                         y <= py + height - HEADER_SIZE &&
@@ -114,8 +115,6 @@ export default function SchedulerPage() {
         <View className="flex flex-col gap-10 h-full">
             <ScheduleRow>
                 {terms.map((term, idx) => {
-                    const courseRef = useRef(null);
-                    courseRefs.push(courseRef);
                     return (
                         <View key={`${term.season}-${term.year}-${term.level}`} style={{ maxHeight: 400, overflow: 'scroll' }}>
                             <CourseColumn
@@ -124,7 +123,7 @@ export default function SchedulerPage() {
                                 isDraggingOn={isDraggedOn[idx] || false}
                                 id={idx.toString()}
                                 onDrop={(courseData) => handleDrop(idx, courseData)}
-                                ref={courseRef}
+                                ref={(el) => courseRefs.current[idx] = el}
                             >
                                 {term.courses.map((course: any) => (
                                     <CourseDisplay

@@ -1,9 +1,12 @@
 import {useContext, useState} from "react";
 import {Course} from "@/app/types/course";
+import Term from "@/app/types/term";
 import { ScheduleContext } from "../contexts/scheduleContext";
 
 export function useSchedule() {
     const {terms, setTerms} = useContext(ScheduleContext)
+
+    const termNames = ["1A", "1B", "2A", "2B", "3A", "3B", "4A", "4B", "5A", "5B"]
 
     const isScheduled = (courseId: number) => {
         let termIdx = 0;
@@ -16,6 +19,24 @@ export function useSchedule() {
             termIdx++;
         }
         return -1;
+    }
+
+    const calculateTermLevels = () => {
+        let totalUnits = 0;
+        let nextIdx = 0;
+        let currentIdx = 0;
+        setTerms(prevTerms =>
+            prevTerms.map((term: Term, idx: number) => {
+                currentIdx = nextIdx;
+                for (const c of term.courses) {
+                    totalUnits += c.units;
+                }
+                nextIdx += Math.floor(totalUnits/2.5);
+                totalUnits = totalUnits % 2.5;
+                return {...term, level: termNames[Math.min(currentIdx, termNames.length - 1)]}
+            }
+            )
+        );
     }
 
     const addCourse = (termNum: number, course: Course) => {
@@ -34,18 +55,21 @@ export function useSchedule() {
         } else {
             console.error(`Term ${termNum} is out of range`);
         }
+        calculateTermLevels();
     }
 
     const deleteCourse = (courseId: number) => {
         setTerms(prevTerms =>
-            prevTerms.map((term, idx) => {
+            prevTerms.map((term: Term, idx: number) => {
                 return {...term, courses: term.courses.filter(c => c.id !== courseId)}
             })
         );
+        calculateTermLevels();
     }
 
     const newTerm = () => {
-        setTerms(prevTerms => [...prevTerms, {}])
+        setTerms(prevTerms => [...prevTerms, {season: "Unknown", level: "1A", year: 2024, courses: []}])
+        calculateTermLevels();
     }
 
     return {
