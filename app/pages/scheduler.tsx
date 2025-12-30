@@ -31,7 +31,6 @@ export default function SchedulerPage() {
     const theme = useTheme();
     const [isDragging, setIsDragging] = useState(false);
     const [isDraggedOn, setIsDraggedOn] = useState<{[key: number]: boolean}>({});
-    //const courseRefs: React.RefObject<View>[] = [];
     const courseRefs = useRef([]);
 
     const isMobile = useIsMobile(); 
@@ -119,6 +118,7 @@ export default function SchedulerPage() {
                         <View key={`${term.season}-${term.year}-${term.level}`} style={{ maxHeight: 400, overflow: 'scroll' }}>
                             <CourseColumn
                                 term={term.level}
+                                termNum={idx}
                                 date={`${term.season} ${term.year}`}
                                 isDraggingOn={isDraggedOn[idx] || false}
                                 id={idx.toString()}

@@ -8,6 +8,8 @@ export function useSchedule() {
 
     const termNames = ["1A", "1B", "2A", "2B", "3A", "3B", "4A", "4B", "5A", "5B"]
 
+    const unitsInFullTerm = 2.5;
+
     const isScheduled = (courseId: number) => {
         let termIdx = 0;
         for (const term of terms) {
@@ -21,6 +23,15 @@ export function useSchedule() {
         return -1;
     }
 
+    const unitsInTerm = (termNum: number) => {
+        const term = terms[termNum];
+        let termUnits = 0.0;
+        for (const c of term.courses) {
+            termUnits += c.units;
+        }
+        return termUnits;
+    }
+
     const calculateTermLevels = () => {
         let totalUnits = 0;
         let nextIdx = 0;
@@ -31,8 +42,8 @@ export function useSchedule() {
                 for (const c of term.courses) {
                     totalUnits += c.units;
                 }
-                nextIdx += Math.floor(totalUnits/2.5);
-                totalUnits = totalUnits % 2.5;
+                nextIdx += Math.floor(totalUnits/unitsInFullTerm);
+                totalUnits = totalUnits % unitsInFullTerm;
                 return {...term, level: termNames[Math.min(currentIdx, termNames.length - 1)]}
             }
             )
@@ -72,11 +83,14 @@ export function useSchedule() {
         calculateTermLevels();
     }
 
+
     return {
         terms,
         addCourse,
         deleteCourse,
         newTerm,
-        isScheduled
+        isScheduled,
+        unitsInTerm,
+        unitsInFullTerm
     }
 }

@@ -1,5 +1,4 @@
 import {StyleSheet, useWindowDimensions} from "react-native";
-import { useTheme } from 'react-native-paper';
 
 export const SchedulerStyles = (theme, width) =>  StyleSheet.create({
     courseContainerEnabled: {
