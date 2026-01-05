@@ -1,6 +1,6 @@
 import { Portal } from "react-native-paper";
-import { Text, View, ViewComponent } from "react-native";
-import React, { useEffect, useLayoutEffect, useState } from "react";
+import { Text, View } from "react-native";
+import React, { useEffect, useState } from "react";
 import Animated, {
     useAnimatedStyle,
     useSharedValue,
@@ -24,6 +24,7 @@ interface InfoTooltipProps {
 export default function InfoTooltip(props: InfoTooltipProps) {
     const [xPos, setXPos] = useState<number>(0);
     const [yPos, setYPos] = useState<number>(0);
+    const [mounted, setMounted] = useState<boolean>(props.visible);
 
     const opacity = useSharedValue(props.visible ? 1 : 0);
 
@@ -37,7 +38,16 @@ export default function InfoTooltip(props: InfoTooltipProps) {
     })
 
     useEffect(() => {
-        opacity.value = withTiming(props.visible ? 1 : 0, { duration: 200 });
+        if (props.visible) {
+            setMounted(true);
+            opacity.value = withTiming(1, { duration: 200 });
+        } else {
+            opacity.value = withTiming(0, { duration: 200 }, (finished) => {
+                if (finished) {
+                    setMounted(false);
+                }
+            });
+        }
     }, [props.visible]);
 
     const animatedStyle = useAnimatedStyle(() => ({
@@ -45,6 +55,10 @@ export default function InfoTooltip(props: InfoTooltipProps) {
     }));
 
     const tooltipStyle = useInternalStyles(ComponentStyles).tooltipContainer;
+
+    if (!mounted) {
+        return null;
+    }
 
     return <Portal>
         <Animated.View 
