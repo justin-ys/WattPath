@@ -2,8 +2,8 @@ import { Season } from "./season";
 import { Course } from "./course";
 
 export default interface Term {
-    level: String,
+    level: string,
     season: Season,
-    year: Number,
+    year: number,
     courses: Course[]
 }

@@ -53,6 +53,7 @@ const CourseColumn = forwardRef<View, CourseColumnProps>((props, ref) => {
                         selectedSeason={terms[props.termNum].season}
                         includeFirst={props.termNum == 0}
                         onSelect={(year, season) => setTermDate(props.termNum!, year, season)}
+                        className="text-gray-400 bg-transparent text-right"
                     />
                  </View>
                  : null}

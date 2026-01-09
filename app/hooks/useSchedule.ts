@@ -1,17 +1,15 @@
-import {useContext} from "react";
+import {useContext, useState} from "react";
 import {Course} from "@/app/types/course";
 import Term from "@/app/types/term";
 import { ScheduleContext } from "../contexts/scheduleContext";
 import { Season, dateToOffset, offsetToDate } from "../types/season";
 
 export function useSchedule() {
-    const {terms, setTerms} = useContext(ScheduleContext)
+    const {terms, setTerms, startYear, setStartYear, startSeason, setStartSeason} = useContext(ScheduleContext)
 
     const termNames = ["1A", "1B", "2A", "2B", "3A", "3B", "4A", "4B", "5A", "5B"]
 
     const unitsInFullTerm = 2.5;
-    const startYear = 2024;
-    const startSeason = Season.Fall;
 
     const isScheduled = (courseId: number) => {
         let termIdx = 0;
@@ -106,6 +104,37 @@ export function useSchedule() {
         );
     }
 
+    const setStartDate = (year: number, season: Season) => {
+        if (terms.length === 0) {
+            return;
+        }
+
+        const oldStartYear = startYear;
+        const oldStartSeason = startSeason;
+        const newStartOffset = dateToOffset(year, season, oldStartYear, oldStartSeason);
+        
+        let firstOffset = -1;
+        if (terms.length > 1) {
+            const secondTermOffset = dateToOffset(terms[1].year, terms[1].season, oldStartYear, oldStartSeason);
+            firstOffset = newStartOffset - secondTermOffset + 1;
+        }
+
+        setTerms(prevTerms => {
+            return prevTerms.map((term: Term, idx: number) => {
+                if (idx === 0) {
+                    return {...term, year: year, season: season};
+                } else if (firstOffset > 0) {
+                    const currentOffset = dateToOffset(term.year, term.season, oldStartYear, oldStartSeason);
+                    const {year: newYear, season: newSeason} = offsetToDate(currentOffset + firstOffset, oldStartYear, oldStartSeason);
+                    return {...term, year: newYear, season: newSeason};
+                }
+                return term;
+            });
+        });
+        setStartYear(year);
+        setStartSeason(season);
+    }
+
     return {
         terms,
         addCourse,
@@ -116,6 +145,7 @@ export function useSchedule() {
         unitsInTerm,
         unitsInFullTerm,
         startYear,
-        startSeason
+        startSeason,
+        setStartDate
     }
 }

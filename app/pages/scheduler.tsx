@@ -8,8 +8,7 @@ import {
 } from 'react-native-paper-tabs';
 import Checklist from "@/app/widgets/scheduler/checklist";
 import Problems from "@/app/widgets/scheduler/problems";
-import {useEffect, useRef, useState, useMemo, useCallback} from "react";
-import Term from "@/app/types/term";
+import {useRef, useState} from "react";
 import {Course} from "@/app/types/course";
 import {useSchedule} from "@/app/hooks/useSchedule";
 import {View, useWindowDimensions} from "react-native";
