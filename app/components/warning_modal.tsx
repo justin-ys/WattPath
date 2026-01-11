@@ -10,6 +10,7 @@ interface WarningModalProps {
     onConfirm: () => void;
     onDecline: () => void;
     visible: boolean;
+    body: string;
 }
 
 export default function WarningModal(props: WarningModalProps) {
@@ -18,7 +19,7 @@ export default function WarningModal(props: WarningModalProps) {
     return <Portal>
         <Modal visible={props.visible} onDismiss={props.onDecline} contentContainerStyle={containerStyle}>
             <View className="flex flex-col items-center">
-                <Text variant="titleMedium" className="p-4">Are you sure you want to change your start date? This may change the dates of other terms.</Text>
+                <Text variant="titleMedium" className="p-4">{props.body}</Text>
                 <View className="flex flex-row">
                     <Button onPress={props.onConfirm}>Yes</Button>
                     <Button onPress={props.onDecline}>No</Button>

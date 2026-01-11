@@ -116,9 +116,7 @@ export default function SchedulerPage() {
                     return (
                         <View key={`${term.season}-${term.year}-${term.level}`} style={{ maxHeight: 400, overflow: 'scroll' }}>
                             <CourseColumn
-                                term={term.level}
                                 termNum={idx}
-                                date={`${term.season} ${term.year}`}
                                 isDraggingOn={isDraggedOn[idx] || false}
                                 id={idx.toString()}
                                 onDrop={(courseData) => handleDrop(idx, courseData)}

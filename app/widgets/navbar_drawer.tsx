@@ -7,7 +7,7 @@ import { useState } from "react";
 import SeasonDropdown from "../components/season_dropdown";
 import { Season } from "../types/season";
 import { useSchedule } from "../hooks/useSchedule";
-import WarningModal from "./navbar/warning_modal";
+import WarningModal from '@/app/components/warning_modal';
 
 export default function Navbar() {
     const { startYear, startSeason, setStartDate } = useSchedule();
@@ -61,6 +61,7 @@ export default function Navbar() {
                 </View>
             </View>
         </View>
-        <WarningModal visible={modalVisible} onConfirm={onModalAccept} onDecline={onModalDecline} />
+        <WarningModal visible={modalVisible} onConfirm={onModalAccept} onDecline={onModalDecline} 
+            body="Are you sure you want to change your start date? This may change the dates of other terms."/>
     </View>
 }

@@ -94,6 +94,15 @@ export function useSchedule() {
         calculateTermLevels();
     }
 
+    const deleteTerm = (termNum: number) => {
+        if (termNum == 0) {
+            console.error("Cannot delete first term");
+            return;
+        }
+        setTerms(prevTerms => prevTerms.filter((_: Term, idx: number) => idx !== termNum));
+        calculateTermLevels();
+    }
+
     const setTermDate = (termNum: number, year: number, season: Season) => {
         setTerms(prevTerms =>
             prevTerms.map((term: Term, idx: number) =>
@@ -140,6 +149,7 @@ export function useSchedule() {
         addCourse,
         deleteCourse,
         newTerm,
+        deleteTerm,
         setTermDate,
         isScheduled,
         unitsInTerm,
