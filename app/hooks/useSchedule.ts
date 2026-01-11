@@ -1,9 +1,15 @@
 import {useContext, useState} from "react";
 import {Course} from "@/app/types/course";
+import Term from "@/app/types/term";
 import { ScheduleContext } from "../contexts/scheduleContext";
+import { Season, dateToOffset, offsetToDate } from "../types/season";
 
 export function useSchedule() {
-    const {terms, setTerms} = useContext(ScheduleContext)
+    const {terms, setTerms, startYear, setStartYear, startSeason, setStartSeason} = useContext(ScheduleContext)
+
+    const termNames = ["1A", "1B", "2A", "2B", "3A", "3B", "4A", "4B", "5A", "5B"]
+
+    const unitsInFullTerm = 2.5;
 
     const isScheduled = (courseId: number) => {
         let termIdx = 0;
@@ -16,6 +22,33 @@ export function useSchedule() {
             termIdx++;
         }
         return -1;
+    }
+
+    const unitsInTerm = (termNum: number) => {
+        const term = terms[termNum];
+        let termUnits = 0.0;
+        for (const c of term.courses) {
+            termUnits += c.units;
+        }
+        return termUnits;
+    }
+
+    const calculateTermLevels = () => {
+        let totalUnits = 0;
+        let nextIdx = 0;
+        let currentIdx = 0;
+        setTerms(prevTerms =>
+            prevTerms.map((term: Term, idx: number) => {
+                currentIdx = nextIdx;
+                for (const c of term.courses) {
+                    totalUnits += c.units;
+                }
+                nextIdx += Math.floor(totalUnits/unitsInFullTerm);
+                totalUnits = totalUnits % unitsInFullTerm;
+                return {...term, level: termNames[Math.min(currentIdx, termNames.length - 1)]}
+            }
+            )
+        );
     }
 
     const addCourse = (termNum: number, course: Course) => {
@@ -34,18 +67,81 @@ export function useSchedule() {
         } else {
             console.error(`Term ${termNum} is out of range`);
         }
+        calculateTermLevels();
     }
 
     const deleteCourse = (courseId: number) => {
         setTerms(prevTerms =>
-            prevTerms.map((term, idx) => {
+            prevTerms.map((term: Term, idx: number) => {
                 return {...term, courses: term.courses.filter(c => c.id !== courseId)}
             })
         );
+        calculateTermLevels();
     }
 
     const newTerm = () => {
-        setTerms(prevTerms => [...prevTerms, {}])
+        let termSeason = startSeason;
+        let termYear = startYear;
+        if (terms.length > 0) {
+            const lastTermSeason = terms[terms.length - 1].season;
+            const lastTermYear = terms[terms.length - 1].year;
+            const lastTermOffset = dateToOffset(lastTermYear, lastTermSeason, startYear, startSeason);
+            const {year, season} = offsetToDate(lastTermOffset + 1, startYear, startSeason);
+            termSeason = season;
+            termYear = year;
+        }
+        setTerms(prevTerms => [...prevTerms, {season: termSeason, level: "1A", year: termYear, courses: []}])
+        calculateTermLevels();
+    }
+
+    const deleteTerm = (termNum: number) => {
+        if (termNum == 0) {
+            console.error("Cannot delete first term");
+            return;
+        }
+        setTerms(prevTerms => prevTerms.filter((_: Term, idx: number) => idx !== termNum));
+        calculateTermLevels();
+    }
+
+    const setTermDate = (termNum: number, year: number, season: Season) => {
+        setTerms(prevTerms =>
+            prevTerms.map((term: Term, idx: number) =>
+                idx == termNum
+                    ? {...term, season: season, year: year}
+                    : term
+            )
+        );
+    }
+
+    const setStartDate = (year: number, season: Season) => {
+        if (terms.length === 0) {
+            return;
+        }
+
+        const oldStartYear = startYear;
+        const oldStartSeason = startSeason;
+        const newStartOffset = dateToOffset(year, season, oldStartYear, oldStartSeason);
+        
+        let firstOffset = -1;
+        if (terms.length > 1) {
+            const secondTermOffset = dateToOffset(terms[1].year, terms[1].season, oldStartYear, oldStartSeason);
+            firstOffset = newStartOffset - secondTermOffset + 1;
+        }
+
+        setTerms(prevTerms => {
+            return prevTerms.map((term: Term, idx: number) => {
+                if (idx === 0) {
+                    return {...term, year: year, season: season};
+                } else if (firstOffset > 0) {
+                    const currentOffset = dateToOffset(term.year, term.season, oldStartYear, oldStartSeason);
+                    const {year: newYear, season: newSeason} = offsetToDate(currentOffset + firstOffset, oldStartYear, oldStartSeason);
+                    return {...term, year: newYear, season: newSeason};
+                }
+                return term;
+            });
+        });
+        setStartYear(year);
+        setStartSeason(season);
     }
 
     return {
@@ -53,6 +149,13 @@ export function useSchedule() {
         addCourse,
         deleteCourse,
         newTerm,
-        isScheduled
+        deleteTerm,
+        setTermDate,
+        isScheduled,
+        unitsInTerm,
+        unitsInFullTerm,
+        startYear,
+        startSeason,
+        setStartDate
     }
 }

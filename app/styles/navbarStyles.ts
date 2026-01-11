@@ -16,7 +16,7 @@ export const NavbarStyles = StyleSheet.create({
     },
     navProgram: {
         fontFamily: 'Roboto',
-        fontWeight: '900',
-        fontStyle: 'italic'
+        fontWeight: '500',
+        color: 'black'
     }
 })

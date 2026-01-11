@@ -1,18 +1,18 @@
-import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { Drawer } from 'expo-router/drawer';
-import { useTheme } from "react-native-paper";
-import Navbar from "@/app/widgets/navbar_drawer";
-import {useWindowDimensions, View} from "react-native";
-import {Navigator, Stack} from "expo-router";
-import Slot = Navigator.Slot;
+import { PaperProvider, useTheme } from "react-native-paper";
+import {Stack} from "expo-router";
+
 import useIsMobile from "./hooks/useIsMobile";
+import { ScheduleProvider } from "./contexts/scheduleContext";
+import Navbar from "@/app/widgets/navbar_drawer";
 
 export default function RootLayout() {
   const theme = useTheme();
-  const {width} = useWindowDimensions();
   const isMobile = useIsMobile();
 
-  return isMobile ? (
+  return <PaperProvider>
+   <ScheduleProvider>
+    {isMobile ? (
       <Drawer
         drawerContent={(props) => <Navbar borderEnabled={false} />}
         screenOptions={{
@@ -40,4 +40,7 @@ export default function RootLayout() {
         />
       </Drawer> )
       : <Stack screenOptions={{ headerShown: false }} />
+    }
+   </ScheduleProvider>
+  </PaperProvider>
 }
